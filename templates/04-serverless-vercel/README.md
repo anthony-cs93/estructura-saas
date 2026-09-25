@@ -95,5 +95,7 @@ Proceso de migración:
 ## 🔗 Referencias
 
 - Backend de referencia: [`../../boilerplate-backend/`](../../boilerplate-backend/)
+- Frontend de referencia: [`../../boilerplate-frontend/`](../../boilerplate-frontend/)
+- Guía del frontend: [`../../08-FRONTEND.md`](../../08-FRONTEND.md)
 - Arquitectura y decisiones: [`../../04-ARQUITECTURA.md`](../../04-ARQUITECTURA.md)
 - Despliegue (patrón B, Vercel catch-all): [`../../07-DEPLOY.md`](../../07-DEPLOY.md)

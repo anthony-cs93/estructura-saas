@@ -108,6 +108,8 @@ Tus tablas Supabase se quedan igual.
 
 ## 🔗 Referencias
 
+- Frontend de referencia: [`../../boilerplate-frontend/`](../../boilerplate-frontend/)
+- Guía del frontend: [`../../08-FRONTEND.md`](../../08-FRONTEND.md)
 - Patrón A (BaaS) en detalle: [`../../07-DEPLOY.md`](../../07-DEPLOY.md)
 - Comparativa de arquitecturas: [`../../02-COMPARATIVA-OPCIONES.md`](../../02-COMPARATIVA-OPCIONES.md)
 - [Supabase Docs](https://supabase.com/docs)

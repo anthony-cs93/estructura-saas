@@ -45,6 +45,7 @@ Combina lo mejor de dos enfoques:
 | **[05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)** | Fragmentos de código listos para copiar | 30 min |
 | **[06-CHECKLIST-MODULO.md](06-CHECKLIST-MODULO.md)** | Agregar un módulo de dominio | 5 min |
 | **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue y detalle técnico | 20 min |
+| **[08-FRONTEND.md](08-FRONTEND.md)** | Guía del frontend (Next.js) que consume el backend | 15 min |
 | **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** | Tarjeta de referencia | 5 min |
 | **[INDEX.md](INDEX.md)** | Índice completo | 2 min |
 
@@ -61,6 +62,8 @@ Combina lo mejor de dos enfoques:
 
 Además, el backend de referencia **Express + TypeScript + Turso** con capas service/repository vive en
 **[`boilerplate-backend/`](boilerplate-backend/)** y es la base de las arquitecturas 1, 2 y 4.
+El frontend que lo consume (Next.js + TypeScript) tiene su guía en **[08-FRONTEND.md](08-FRONTEND.md)**
+y su código de referencia en **[`boilerplate-frontend/`](boilerplate-frontend/)**.
 
 ---
 
@@ -79,6 +82,7 @@ estructura-saas/
 │  ├─ 05-PATRONES-CODIGO.md            ← Código copiable (16 piezas)
 │  ├─ 06-CHECKLIST-MODULO.md           ← Agregar un módulo
 │  ├─ 07-DEPLOY.md                     ← Patrones y detalle de despliegue
+│  ├─ 08-FRONTEND.md                   ← Guía del frontend (Next.js)
 │  ├─ QUICK-REFERENCE.md               ← Cheat sheet
 │  └─ INDEX.md                         ← Índice completo
 │
@@ -89,8 +93,12 @@ estructura-saas/
 │     ├─ 03-baas-supabase/
 │     └─ 04-serverless-vercel/
 │
-└─ 🧱 BACKEND DE REFERENCIA
-   └─ boilerplate-backend/             ← Express + TS + Turso (service/repository)
+└─ 🧱 CÓDIGO DE REFERENCIA
+   ├─ boilerplate-backend/             ← Express + TS + Turso (service/repository)
+   │  ├─ src/
+   │  ├─ AGENTS.md
+   │  └─ package.json
+   └─ boilerplate-frontend/            ← Next.js + TS (cliente HTTP, sesión, hooks)
       ├─ src/
       ├─ AGENTS.md
       └─ package.json
@@ -122,7 +130,11 @@ estructura-saas/
 └──────────────┬────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────┐
-│ 6. Sigue 03-FASES-DESARROLLO (1-2 weeks)  │ ← MVP en producción
+│ 6. Frontend: 08-FRONTEND.md (15 min)      │ ← boilerplate-frontend/
+└──────────────┬────────────────────────────┘
+               │
+┌──────────────▼────────────────────────────┐
+│ 7. Sigue 03-FASES-DESARROLLO (1-2 weeks)  │ ← MVP en producción
 └──────────────┬────────────────────────────┘
                │
                ✅ ¡Éxito!

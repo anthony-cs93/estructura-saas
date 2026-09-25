@@ -98,21 +98,27 @@ guia-arquitectura-saas/
 ├─ 01-MATRIZ-DECISION.md             ← Elige arquitectura
 ├─ 02-COMPARATIVA-OPCIONES.md        ← Entiende pros/contras
 ├─ 03-FASES-DESARROLLO.md            ← Roadmap de 4 fases
+├─ 04-ARQUITECTURA.md                ← Blueprint del backend
+├─ 05-PATRONES-CODIGO.md             ← Código copiable
+├─ 06-CHECKLIST-MODULO.md            ← Agregar un módulo
+├─ 07-DEPLOY.md                      ← Patrones de deploy
+├─ 08-FRONTEND.md                    ← Guía del frontend
 ├─ INDEX.md                          ← Este índice
 ├─ QUICK-REFERENCE.md                ← ESTE ARCHIVO
 │
-└─ templates/
-   ├─ 01-full-stack-monorepo/       ✅ Guía
-   │  └─ README.md                   (Paso a paso)
-   │
-   ├─ 02-backend-separado/          ✅ Guía
-   │  └─ README.md                   (Paso a paso)
-   │
-   ├─ 03-baas-supabase/             ✅ Guía
-   │  └─ README.md                   (Paso a paso)
-   │
-   └─ 04-serverless-vercel/         ✅ Guía
-      └─ README.md                   (Paso a paso)
+├─ templates/
+│  ├─ 01-full-stack-monorepo/       ✅ Guía
+│  │  └─ README.md                   (Paso a paso)
+│  ├─ 02-backend-separado/          ✅ Guía
+│  │  └─ README.md                   (Paso a paso)
+│  ├─ 03-baas-supabase/             ✅ Guía
+│  │  └─ README.md                   (Paso a paso)
+│  └─ 04-serverless-vercel/         ✅ Guía
+│     └─ README.md                   (Paso a paso)
+│
+└─ 🧱 CÓDIGO DE REFERENCIA
+   ├─ boilerplate-backend/          ✅ Backend Express + TS + Turso
+   └─ boilerplate-frontend/         ✅ Frontend Next.js + TS
 ```
 
 ---
@@ -195,6 +201,12 @@ FRONTEND_URL=http://localhost:3000
 FRONTEND_URL_PROD=https://tudominio.com
 ```
 
+### Frontend (Next.js) — `boilerplate-frontend/`
+```env
+# '' = mismo origen (Patrón B) o URL del backend (Patrón C)
+NEXT_PUBLIC_API_URL=
+```
+
 ---
 
 ## 🐛 Debugging rápido
@@ -251,7 +263,7 @@ FRONTEND_URL_PROD=https://tudominio.com
    ↓
 3. Lee comparativa de tu arquitectura     10 min
    ↓
-4. Clone boilerplate                      5 min
+4. Usa boilerplate-backend/ + frontend/   5 min
    ↓
 5. npm install && npm run dev             10 min
    ↓
@@ -291,7 +303,10 @@ FRONTEND_URL_PROD=https://tudominio.com
 → Lee `03-FASES-DESARROLLO.md`
 
 **¿Código de ejemplo?**
-→ Lee `05-PATRONES-CODIGO.md` o usa `boilerplate-backend/`
+→ Lee `05-PATRONES-CODIGO.md` o usa `boilerplate-backend/` + `boilerplate-frontend/`
+
+**¿Frontend?**
+→ Lee `08-FRONTEND.md` y copia piezas de `boilerplate-frontend/`
 
 ---
 

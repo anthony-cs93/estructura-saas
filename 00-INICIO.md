@@ -34,7 +34,8 @@ estructura-saas/
 │  ├─ 04-ARQUITECTURA.md            Blueprint del backend + decisiones de diseño
 │  ├─ 05-PATRONES-CODIGO.md         Código copiable (16 piezas)
 │  ├─ 06-CHECKLIST-MODULO.md        Agregar un módulo de dominio
-│  └─ 07-DEPLOY.md                  Patrones de despliegue y detalle
+│  ├─ 07-DEPLOY.md                  Patrones de despliegue y detalle
+│  └─ 08-FRONTEND.md                Guía del frontend (Next.js)
 │
 ├─ QUICK-REFERENCE.md               Cheat sheet
 ├─ INDEX.md                         Índice completo
@@ -45,9 +46,13 @@ estructura-saas/
 │  ├─ 03-baas-supabase/             Next.js + Supabase (sin backend)
 │  └─ 04-serverless-vercel/         Next.js API routes puro
 │
-└─ boilerplate-backend/             Backend de referencia Express + TS + Turso
-   ├─ src/                          Capas service/repository, auth, planes, migraciones
-   └─ AGENTS.md                     Convenciones obligatorias para agentes
+└─ 🧱 CÓDIGO DE REFERENCIA
+   ├─ boilerplate-backend/          Backend Express + TS + Turso (service/repository)
+   │  ├─ src/                       Capas service/repository, auth, planes, migraciones
+   │  └─ AGENTS.md                  Convenciones obligatorias para agentes
+   └─ boilerplate-frontend/         Frontend Next.js + TS (cliente HTTP, sesión, hooks)
+      ├─ src/
+      └─ AGENTS.md                  Convenciones obligatorias para agentes
 ```
 
 ---
@@ -72,6 +77,12 @@ estructura-saas/
 1. Lee **[04-ARQUITECTURA.md](04-ARQUITECTURA.md)**
 2. Copia piezas de **[05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)**
 3. Usa `boilerplate-backend/` como base o referencia
+
+### Si vas a construir el frontend:
+
+1. Lee **[08-FRONTEND.md](08-FRONTEND.md)**
+2. Copia las piezas clave de `boilerplate-frontend/`
+3. Conecta con el backend de referencia (`boilerplate-backend/`)
 
 ### Si quieres entender TODO antes de empezar:
 

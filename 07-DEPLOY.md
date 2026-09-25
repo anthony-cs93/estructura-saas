@@ -149,6 +149,46 @@ el navegador la devolvió. Si `false`, hay bloqueo → avisar al usuario. No sir
 
 ---
 
+## Caso real: cutover a cookie first-party (C3 ejecutado)
+
+Bitácora condensada de un proyecto en producción (Cotizador Modulax, 2026-09-24) que migró
+de `app.vercel.app` + `api.onrender.com` a dominio propio para que la cookie de sesión sea
+**first-party** y funcione en Safari/Firefox/Chrome.
+
+**Estado final**:
+
+| Componente | Valor |
+|---|---|
+| Frontend (Vercel) | `https://cotizadormodulax.com` (apex → 308 → `www.`) |
+| Backend (Render) | `https://api.cotizadormodulax.com` |
+| DNS | `@` A → IP de Vercel · `www` CNAME → Vercel · `api` CNAME → `*.onrender.com` |
+| Cookie | `access_token=…; HttpOnly; Secure; SameSite=Lax` (host-only, sin `Domain`) |
+| CORS (Render) | allowlist: `https://cotizadormodulax.com`, `https://www.cotizadormodulax.com` |
+
+**Pasos**:
+
+1. DNS en el registrador: `@` A → IP de Vercel; `www` CNAME → Vercel; `api` CNAME → Render.
+2. Vercel: añadir dominio `cotizadormodulax.com` (apex redirige a `www`).
+3. Render: custom domain `api.cotizadormodulax.com` en el servicio.
+4. Frontend: `VITE_API_URL=https://api.cotizadormodulax.com` (ver gotcha abajo).
+5. Backend: cookie `SameSite=Lax` (opcional `COOKIE_DOMAIN=.cotizadormodulax.com` para
+   compartir entre subdominios; no fue necesario).
+6. Verificar: bundle contiene la URL nueva; `GET /api/health` 200; login → `Set-Cookie`
+   con `SameSite=Lax`; `GET /api/auth/me` con cookie → 200; logout limpia la cookie.
+
+**Gotcha crítico**: la variable `VITE_API_URL` existía en el dashboard de Vercel y
+**sobreescribía** `.env.production` (Vite no sobreescribe `process.env` con `.env.*`). El
+bundle seguía llamando a `onrender.com` hasta corregir la variable en el dashboard. Además,
+`VITE_*` **no puede ser Secret** (se expone al cliente): guardarla como **Config**.
+
+**Rollback**: Vercel → promote del deployment anterior; backend → revertir el commit de la
+cookie (el `SameSite=None` viejo sigue funcionando cross-site).
+
+**Lección**: verificar el spelling del dominio antes de cualquier consulta DNS (un typo da
+NXDOMAIN y parece "dominio caído").
+
+---
+
 ## Cómo hereda la plantilla
 
 `04-ARQUITECTURA.md` es el núcleo (capas, migraciones, errores, planes). El patrón solo cambia el "envoltorio":

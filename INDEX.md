@@ -17,6 +17,7 @@ Navega la guía usando este índice.
 | **[05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)** | Código copiable (16 piezas) | Developers |
 | **[06-CHECKLIST-MODULO.md](06-CHECKLIST-MODULO.md)** | Agregar un módulo de dominio | Developers |
 | **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue y detalle técnico | Todos (al desplegar) |
+| **[08-FRONTEND.md](08-FRONTEND.md)** | Guía del frontend (Next.js) que consume el backend | Developers |
 | **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** | Tarjeta de referencia rápida | Todos |
 
 ---
@@ -47,7 +48,7 @@ Cada carpeta es una guía con la estructura recomendada, los pasos de montaje y 
 
 ---
 
-## 🧱 Backend de referencia
+## 🧱 Código de referencia
 
 ### boilerplate-backend/
 Backend **Express + TypeScript + Turso** completo, con:
@@ -61,6 +62,17 @@ Backend **Express + TypeScript + Turso** completo, con:
 
 Es la base de las arquitecturas 1, 2 y 4. Su diseño y piezas de código viven en los docs raíz
 (`04-ARQUITECTURA.md`, `05-PATRONES-CODIGO.md`, `06-CHECKLIST-MODULO.md`, `07-DEPLOY.md`).
+
+### boilerplate-frontend/
+Frontend **Next.js (Pages Router) + TypeScript** con las piezas clave para consumir el backend:
+
+- Cliente HTTP centralizado (`lib/api.ts`) con `credentials: 'include'`.
+- Sesión por cookie `httpOnly` (`lib/auth.ts`): login, register, logout, `me`, sonda de cookies.
+- Hooks de datos (`lib/hooks/`): `useAuth` y `useData`.
+- Tipos de dominio (`types/`) y entorno validado (`config/env.ts`).
+- `AGENTS.md` con convenciones obligatorias.
+
+Su guía de diseño y buenas prácticas vive en `08-FRONTEND.md`.
 
 ---
 
@@ -91,6 +103,13 @@ Es la base de las arquitecturas 1, 2 y 4. Su diseño y piezas de código viven e
 
 **Tiempo total**: 1-2 horas
 
+### Si vas a construir el frontend:
+1. **[08-FRONTEND.md](08-FRONTEND.md)** → entiende el diseño
+2. `boilerplate-frontend/` → copia las piezas clave
+3. `boilerplate-backend/` → conecta con el backend de referencia
+
+**Tiempo total**: 30-60 minutos
+
 ---
 
 ## 💬 Navegación rápida
@@ -105,6 +124,7 @@ Es la base de las arquitecturas 1, 2 y 4. Su diseño y piezas de código viven e
 | Código de ejemplo | [05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md) |
 | Agregar un módulo | [06-CHECKLIST-MODULO.md](06-CHECKLIST-MODULO.md) |
 | Desplegar | [07-DEPLOY.md](07-DEPLOY.md) |
+| Frontend | [08-FRONTEND.md](08-FRONTEND.md) |
 | Referencia rápida | [QUICK-REFERENCE.md](QUICK-REFERENCE.md) |
 
 ---

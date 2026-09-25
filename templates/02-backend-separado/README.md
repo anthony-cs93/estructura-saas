@@ -125,6 +125,8 @@ servidor. Las reglas de negocio viven en el `service`, no en las rutas ni en el 
 ## 🔗 Referencias
 
 - Backend de referencia: [`../../boilerplate-backend/`](../../boilerplate-backend/)
+- Frontend de referencia: [`../../boilerplate-frontend/`](../../boilerplate-frontend/)
+- Guía del frontend: [`../../08-FRONTEND.md`](../../08-FRONTEND.md)
 - Arquitectura y decisiones: [`../../04-ARQUITECTURA.md`](../../04-ARQUITECTURA.md)
 - Piezas de código copiables: [`../../05-PATRONES-CODIGO.md`](../../05-PATRONES-CODIGO.md)
 - Agregar módulos: [`../../06-CHECKLIST-MODULO.md`](../../06-CHECKLIST-MODULO.md)

@@ -61,14 +61,16 @@ git --version
 ### 1.5 Monta la estructura base
 
 Sigue la guía de tu arquitectura en `templates/[tu-arquitectura]/` y usa
-`boilerplate-backend/` como esqueleto del backend:
+`boilerplate-backend/` como esqueleto del backend y `boilerplate-frontend/` como
+esqueleto del frontend:
 
 ```bash
 cd ~/projects
 mkdir mi-app && cd mi-app
 # 1. Sigue los pasos de la guía de tu arquitectura
 # 2. Copia boilerplate-backend/ como base del backend
-# 3. npm install
+# 3. Copia boilerplate-frontend/ como base del frontend
+# 4. npm install
 ```
 
 Cada arquitectura tiene su guía en `templates/`.
@@ -181,6 +183,9 @@ pages/, components/, lib/, ...
 # Repo 2: backend
 src/routes/, src/controllers/, src/middleware/, ...
 ```
+
+> 💡 Para el frontend, copia las piezas clave de `boilerplate-frontend/`
+> (cliente HTTP, sesión, hooks) y sigue la guía de [08-FRONTEND.md](08-FRONTEND.md).
 
 ### 2.4 Primeros commits
 
@@ -331,6 +336,10 @@ export function useQuotes() {
   return { quotes, create }
 }
 ```
+
+> 💡 Patrón canónico: no llames a `fetch` directamente. Usa el cliente centralizado
+> `lib/api.ts` de `boilerplate-frontend/` y los hooks `useData`/`useAuth`
+> (ver [08-FRONTEND.md](08-FRONTEND.md)).
 
 3. **Crea el componente UI**:
 ```typescript
@@ -627,7 +636,7 @@ Luego en Sentry dashboard verás errores en vivo.
 
 1. **Estoy en Fase 1**: Ve a [01-MATRIZ-DECISION.md](01-MATRIZ-DECISION.md)
 2. **Estoy en Fase 2**: Ve a `templates/[tu-arquitectura]/README.md`
-3. **Estoy en Fase 3**: Consulta [04-ARQUITECTURA.md](04-ARQUITECTURA.md) y [05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)
+3. **Estoy en Fase 3**: Consulta [04-ARQUITECTURA.md](04-ARQUITECTURA.md), [05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md) y [08-FRONTEND.md](08-FRONTEND.md)
 4. **Estoy en Fase 4**: Ve a [07-DEPLOY.md](07-DEPLOY.md)
 
 ¡Adelante! 🚀
