@@ -102,19 +102,17 @@ guia-arquitectura-saas/
 ├─ QUICK-REFERENCE.md                ← ESTE ARCHIVO
 │
 └─ templates/
-   ├─ 01-full-stack-monorepo/       ✅ Listo
-   │  └─ README.md                   (Instrucciones)
+   ├─ 01-full-stack-monorepo/       ✅ Guía
+   │  └─ README.md                   (Paso a paso)
    │
-   ├─ 02-backend-separado/          ✅ Listo
-   │  ├─ frontend/                   (Next.js en Vercel)
-   │  ├─ backend/                    (Express en Render)
-   │  └─ README.md                   (Instrucciones)
+   ├─ 02-backend-separado/          ✅ Guía
+   │  └─ README.md                   (Paso a paso)
    │
-   ├─ 03-baas-supabase/             ✅ Listo
-   │  └─ README.md                   (Instrucciones)
+   ├─ 03-baas-supabase/             ✅ Guía
+   │  └─ README.md                   (Paso a paso)
    │
-   └─ 04-serverless-vercel/         ✅ Listo
-      └─ README.md                   (Instrucciones)
+   └─ 04-serverless-vercel/         ✅ Guía
+      └─ README.md                   (Paso a paso)
 ```
 
 ---
@@ -293,7 +291,7 @@ FRONTEND_URL_PROD=https://tudominio.com
 → Lee `03-FASES-DESARROLLO.md`
 
 **¿Código de ejemplo?**
-→ Lee el README de tu boilerplate
+→ Lee `05-PATRONES-CODIGO.md` o usa `boilerplate-backend/`
 
 ---
 

@@ -1,64 +1,30 @@
-# Serverless: Next.js API Routes Puro
+# Guía: Serverless — Next.js API Routes Puro
 
-Este boilerplate es para apps **simples con <10 endpoints**:
+Guía paso a paso para montar una app **simple** donde el backend son las API routes de
+Next.js, todo en un solo despliegue a Vercel.
+
+**Para**:
 - ✅ Consultas directas a BD
 - ✅ CRUD básico
 - ✅ MVP rápido sin backend separado
 - ✅ 1 deploy a Vercel
 
-**No es para**: Apps con >10 endpoints (límite Vercel free)
+**No es para**: apps con muchos endpoints o lógica de negocio compleja.
 
 ---
 
-## 🎯 Ventajas Serverless
+## 🎯 Ventajas
 
 | Aspecto | Ventaja |
 |---|---|
 | **Velocidad** | 1 repo, 1 deploy. Cambios → git push → live. |
-| **Simplicidad** | Frontend + Backend en mismo código. |
-| **Gratuito** | Vercel free: 12 API routes, unlimited executions. |
+| **Simplicidad** | Frontend + backend en el mismo código. |
 | **Escalado automático** | Vercel maneja todo. |
 | **Mismo lenguaje** | JavaScript/TypeScript en todo. |
 
 ---
 
-## ⚡ Quick Start
-
-### 1. Crear BD
-
-```bash
-# Turso
-npm install -D @libsql/cli
-turso db create mi-app-db
-turso db show mi-app-db --http
-
-# Copiar URL y token a .env.local
-```
-
-### 2. Instalar y correr
-
-```bash
-npm install
-npm run dev
-# http://localhost:3000
-```
-
-### 3. Crear tabla
-
-En Turso CLI:
-```sql
-turso db shell mi-app-db
-> CREATE TABLE quotes (
-    id TEXT PRIMARY KEY,
-    client_name TEXT NOT NULL,
-    total REAL NOT NULL,
-    status TEXT DEFAULT 'draft'
-  );
-```
-
----
-
-## 📁 Estructura
+## 📁 Estructura recomendada
 
 ```
 pages/
@@ -74,154 +40,60 @@ pages/
 
 ---
 
-## 💻 Ejemplo: API route
+## ⚡ Pasos de montaje
 
-### pages/api/quotes.ts
+1. **Crea la BD Turso**: crea la base, obtén la URL y el token, y crea las tablas con el CLI.
+2. **Configura la conexión**: crea `lib/db.ts` con el cliente de Turso usando las variables de
+   entorno (`TURSO_URL`, `TURSO_TOKEN`).
+3. **Crea las API routes** en `pages/api/`: una por recurso, manejando los métodos HTTP
+   (GET para listar, POST para crear, etc.).
+4. **Construye la UI**: páginas y componentes que consumen las API routes con `fetch` relativo
+   (mismo origen, sin CORS).
+5. **Levanta local**: `npm run dev` → `http://localhost:3000`.
 
-```typescript
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { db } from '@/lib/db'
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'GET') {
-    // Listar
-    const result = await db.execute('SELECT * FROM quotes')
-    return res.json({ data: result.rows })
-  }
-
-  if (req.method === 'POST') {
-    // Crear
-    const { clientName, total } = req.body
-    
-    const id = crypto.randomUUID()
-    await db.execute(
-      'INSERT INTO quotes (id, client_name, total) VALUES (?, ?, ?)',
-      [id, clientName, total]
-    )
-    
-    return res.status(201).json({ data: { id, clientName, total } })
-  }
-
-  res.status(405).json({ error: 'Not allowed' })
-}
-```
-
-### pages/index.tsx (Frontend)
-
-```typescript
-import { useState, useEffect } from 'react'
-
-export default function Home() {
-  const [quotes, setQuotes] = useState([])
-  const [clientName, setClientName] = useState('')
-  const [total, setTotal] = useState('')
-
-  useEffect(() => {
-    fetchQuotes()
-  }, [])
-
-  const fetchQuotes = async () => {
-    const res = await fetch('/api/quotes')
-    const { data } = await res.json()
-    setQuotes(data)
-  }
-
-  const handleCreate = async () => {
-    const res = await fetch('/api/quotes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientName, total: parseFloat(total) })
-    })
-    
-    const { data } = await res.json()
-    setQuotes([...quotes, data])
-    setClientName('')
-    setTotal('')
-  }
-
-  return (
-    <div>
-      <input
-        placeholder="Client name"
-        value={clientName}
-        onChange={(e) => setClientName(e.target.value)}
-      />
-      <input
-        type="number"
-        placeholder="Total"
-        value={total}
-        onChange={(e) => setTotal(e.target.value)}
-      />
-      <button onClick={handleCreate}>Create</button>
-
-      <ul>
-        {quotes.map((q) => (
-          <li key={q[0]}>
-            {q[1]} - ${q[2]}
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-```
+> Para lógica más compleja (auth, planes, capas service/repository), usa el backend de
+> referencia **[`../../boilerplate-backend/`](../../boilerplate-backend/)** en lugar de
+> escribir todo en las API routes.
 
 ---
 
 ## 🚀 Deploy
 
-```bash
-# 1. Push a GitHub
-git push origin main
-
-# 2. Vercel conecta automáticamente
-# (settings → GitHub → connect repo)
-
-# 3. Env variables en Vercel dashboard:
-# TURSO_URL=...
-# TURSO_TOKEN=...
-
-# 4. Cada push = deploy automático
-```
+1. Sube el repo a GitHub.
+2. Conecta el repo en Vercel (deploy automático en cada push).
+3. Configura las variables de entorno en Vercel (`TURSO_URL`, `TURSO_TOKEN`).
 
 ---
 
-## ⚠️ Límites (Por qué NO elegir si tienes muchos endpoints)
+## ⚠️ Límite: si creces
 
-| Límite | Free | Pro |
-|---|---|---|
-| **API Routes** | 12 | Unlimited |
-| **Timeout** | 10 sec | 60 sec |
-| **Memoria** | 512 MB | Más |
-| **Concurrent** | Limitado | Más |
+Si la app crece en endpoints o lógica:
 
-**Si tienes >10 endpoints**: Migra a Backend Separado.
+- ❌ El backend queda acoplado al frontend y limitado a funciones serverless.
+- ✅ **Solución**: migra a **Backend Separado** (ver `../../02-backend-separado/`).
+
+Proceso de migración:
+
+1. Copia tu BD (Turso se queda igual).
+2. Crea una carpeta `backend/` con Express (usa `boilerplate-backend/` como base).
+3. Mueve la lógica de `pages/api` a Express.
+4. Despliega el backend a Render.
+5. El frontend consume el backend remoto (ya no las API routes).
 
 ---
 
 ## ✅ Checklist
 
-- [ ] DB Turso creada
-- [ ] TURSO_URL y TURSO_TOKEN en `.env.local`
-- [ ] Tabla `quotes` creada
-- [ ] `npm run dev` funciona
-- [ ] API route `/api/quotes` responde
-- [ ] Frontend conecta a API
-- [ ] Deploy a Vercel
-- [ ] Env vars en Vercel
+- [ ] BD Turso creada con tablas
+- [ ] `TURSO_URL` y `TURSO_TOKEN` en `.env.local`
+- [ ] API routes respondiendo
+- [ ] Frontend conecta a la API
+- [ ] Deploy a Vercel con variables de entorno
 
 ---
 
-## 🔗 Próximo: si creces
+## 🔗 Referencias
 
-Si necesitas >10 endpoints:
-
-1. Copia tu BD (Turso se queda igual)
-2. Crea carpeta `backend/` con Express
-3. Mueve lógica de `/api` a Express
-4. Deploy backend a Render
-5. Frontend consume backend (no API routes)
-
-→ Ahora tienes Backend Separado (ver `../../02-backend-separado/`)
-
-¡Listo! 🚀
+- Backend de referencia: [`../../boilerplate-backend/`](../../boilerplate-backend/)
+- Arquitectura y decisiones: [`../../04-ARQUITECTURA.md`](../../04-ARQUITECTURA.md)
+- Despliegue (patrón B, Vercel catch-all): [`../../07-DEPLOY.md`](../../07-DEPLOY.md)

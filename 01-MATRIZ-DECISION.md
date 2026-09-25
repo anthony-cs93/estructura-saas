@@ -137,28 +137,28 @@ Suma los puntos de cada arquitectura:
 - Empiezas hoy, vas rápido, escalas sin backend
 - Perfecto para Material Catalog
 - Guía de deploy: [07-DEPLOY.md](07-DEPLOY.md) (Patrón A)
-- Boilerplate: `templates/03-baas-supabase/`
+- Guía: `templates/03-baas-supabase/`
 
 ### Ganador: Serverless (7-8 puntos)
 ✅ **Recomendación**: Next.js API routes puro
 - Consultas simples directas a BD
 - Sin backend separado, sin complejidad
 - Perfecto para App Contable (v1)
-- Boilerplate: `templates/04-serverless-vercel/`
+- Guía: `templates/04-serverless-vercel/`
 
 ### Ganador: Full-Stack Monorepo (7-9 puntos)
 ✅ **Recomendación**: Next.js fullstack (pero cuidado con Vercel limits)
 - Frontend + Backend en 1 repo, 1 deploy
 - Bueno si <10 functions
 - Si pasa de 10 functions → migra a Backend Separado
-- Boilerplate: `templates/01-full-stack-monorepo/`
+- Guía: `templates/01-full-stack-monorepo/`
 
 ### Ganador: Backend Separado (8-9 puntos)
 ✅ **Recomendación**: Next.js (Vercel) + Express (Render)
 - Para apps complejas, muchos endpoints
 - Proteger lógica de negocio
 - Perfecto para Modulax
-- Boilerplate: `templates/02-backend-separado/`
+- Guía: `templates/02-backend-separado/`
 
 ---
 
@@ -200,7 +200,7 @@ Si estás empezando una **app de catálogo/consulta**:
 ## 📋 Próximos pasos
 
 1. **Hiciste la matriz y elegiste**: Ve a `02-COMPARATIVA-OPCIONES.md`
-2. **Quieres ver ejemplos prácticos**: Ve a `templates/[tu-arquitectura]/`
+2. **Quieres la guía paso a paso**: Ve a `templates/[tu-arquitectura]/`
 3. **Quieres entender más a fondo**: Ve a [04-ARQUITECTURA.md](04-ARQUITECTURA.md)
 
 ¡Vamos! 🚀

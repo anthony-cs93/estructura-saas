@@ -39,7 +39,7 @@ estructura-saas/
 ├─ QUICK-REFERENCE.md               Cheat sheet
 ├─ INDEX.md                         Índice completo
 │
-├─ templates/                       Boilerplates listos para clonar
+├─ templates/                       Guías de arquitectura (paso a paso)
 │  ├─ 01-full-stack-monorepo/       Next.js + Express (1 repo)
 │  ├─ 02-backend-separado/          Next.js (Vercel) + Express (Render)
 │  ├─ 03-baas-supabase/             Next.js + Supabase (sin backend)
@@ -47,7 +47,6 @@ estructura-saas/
 │
 └─ boilerplate-backend/             Backend de referencia Express + TS + Turso
    ├─ src/                          Capas service/repository, auth, planes, migraciones
-   ├─ docs/                         Docs originales del backend
    └─ AGENTS.md                     Convenciones obligatorias para agentes
 ```
 
@@ -66,7 +65,7 @@ estructura-saas/
 1. Ve a **[02-COMPARATIVA-OPCIONES.md](02-COMPARATIVA-OPCIONES.md)**
 2. Lee pros/contras de esa opción
 3. Ve a la carpeta `templates/` correspondiente
-4. Clona el boilerplate y empieza
+4. Sigue la guía paso a paso y usa `boilerplate-backend/` como base
 
 ### Si vas a construir un backend con lógica protegida:
 

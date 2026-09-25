@@ -29,20 +29,14 @@ boilerplate-backend/
 ├── package.json
 ├── tsconfig.json
 ├── .env.example
-├── src/
-│   ├── config/env.ts
-│   ├── db/ (client, migrate, migrations/)
-│   ├── lib/ (errors, http, validation, audit)
-│   ├── middleware/ (auth, requireRole, plan, rateLimit, errorHandler)
-│   ├── modules/<dominio>/{repository,service,schemas,routes}
-│   ├── routes.ts
-│   └── index.ts
-└── docs/                  # docs originales del backend
-    ├── blueprint.md
-    ├── architecture.md
-    ├── deploy.md
-    ├── patrones-deploy.md
-    └── checklist-modulo.md
+└── src/
+    ├── config/env.ts
+    ├── db/ (client, migrate, migrations/)
+    ├── lib/ (errors, http, validation, audit)
+    ├── middleware/ (auth, requireRole, plan, rateLimit, errorHandler)
+    ├── modules/<dominio>/{repository,service,schemas,routes}
+    ├── routes.ts
+    └── index.ts
 ```
 
 ## Cómo arrancar una app nueva

@@ -8,7 +8,7 @@ Una roadmap de 4 fases. Cada fase tiene tasks, checklists, y duración estimada.
 
 **Objetivo**: Decidir arquitectura y estar listo para codinear.
 **Duración**: 1-2 días
-**Entregable**: Architecture decision document + boilerplate clonado
+**Entregable**: Architecture decision document + estructura base montada
 
 ### 1.1 Define el scope
 
@@ -58,16 +58,20 @@ git --version
 # - Render o Railway (si usas backend separado)
 ```
 
-### 1.5 Clona el boilerplate
+### 1.5 Monta la estructura base
+
+Sigue la guía de tu arquitectura en `templates/[tu-arquitectura]/` y usa
+`boilerplate-backend/` como esqueleto del backend:
 
 ```bash
 cd ~/projects
-git clone [URL-de-tu-arquitectura] mi-app
-cd mi-app
-npm install
+mkdir mi-app && cd mi-app
+# 1. Sigue los pasos de la guía de tu arquitectura
+# 2. Copia boilerplate-backend/ como base del backend
+# 3. npm install
 ```
 
-Cada arquitectura tiene su carpeta en `templates/`.
+Cada arquitectura tiene su guía en `templates/`.
 
 ### 📋 Checklist Fase 1
 
@@ -75,7 +79,7 @@ Cada arquitectura tiene su carpeta en `templates/`.
 - [ ] Matriz de decisión respondida
 - [ ] Arquitectura validada
 - [ ] Ambiente preparado (Node.js, Git, editor)
-- [ ] Boilerplate clonado y dependencies instaladas
+- [ ] Estructura base montada y dependencies instaladas
 - [ ] Cuentas creadas (Vercel, Turso/Supabase, etc)
 - [ ] `.env.example` → `.env.local` con credentials reales
 

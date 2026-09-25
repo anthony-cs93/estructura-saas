@@ -48,7 +48,7 @@ Convenciones obligatorias para agentes que trabajen sobre esta plantilla.
 
 ## Despliegue y cookies
 
-- Guía completa en `docs/deploy.md`.
+- Guía completa en `../07-DEPLOY.md`.
 - Frontend y backend suelen ser orígenes distintos: cookie `SameSite=None; Secure` en
   producción + `CORS_ORIGIN` como allowlist. `clearSessionCookie` debe usar las **mismas**
   opciones que `setSessionCookie` para poder borrarla.

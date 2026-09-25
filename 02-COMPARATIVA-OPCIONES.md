@@ -489,7 +489,7 @@ Basado en tu experiencia:
 ## 🔗 Próximos pasos
 
 1. **Elegiste arquitectura**: Ve a `03-FASES-DESARROLLO.md`
-2. **Quieres el boilerplate**: Ve a `templates/[tu-arquitectura]/`
+2. **Quieres la guía paso a paso**: Ve a `templates/[tu-arquitectura]/`
 3. **Quieres aprender más**: Ve a [04-ARQUITECTURA.md](04-ARQUITECTURA.md)
 
 ¡Vamos! 🚀

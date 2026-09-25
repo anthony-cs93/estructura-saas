@@ -21,29 +21,29 @@ Navega la guía usando este índice.
 
 ---
 
-## 🚀 Boilerplates (listos para clonar)
+## 🚀 Guías de arquitectura (paso a paso)
 
-Cada carpeta tiene frontend + backend (si aplica) listos para `npm install && npm run dev`.
+Cada carpeta es una guía con la estructura recomendada, los pasos de montaje y el deploy.
 
 ### 01-full-stack-monorepo/
 **Para**: MVP muy rápido, <10 endpoints, equipo pequeño
 **Qué tienes**: Next.js fullstack, 1 repo, 1 deploy a Vercel
-**Status**: base disponible
+**Status**: guía disponible
 
 ### 02-backend-separado/ ⭐
 **Para**: apps complejas, >10 endpoints, proteger lógica
 **Qué tienes**: `frontend/` (Next.js → Vercel) + `backend/` (Express → Render)
-**Status**: base disponible (enriquecible con `boilerplate-backend/`)
+**Status**: guía disponible (backend canónico en `boilerplate-backend/`)
 
 ### 03-baas-supabase/
 **Para**: CRUD simple, MVP ultra rápido, sin backend
 **Qué tienes**: Next.js + Supabase (auth, DB, storage)
-**Status**: base disponible
+**Status**: guía disponible
 
 ### 04-serverless-vercel/
 **Para**: consultas simples, <10 endpoints, todo en Vercel
 **Qué tienes**: Next.js con API routes
-**Status**: base disponible
+**Status**: guía disponible
 
 ---
 
@@ -59,7 +59,8 @@ Backend **Express + TypeScript + Turso** completo, con:
 - Rate limiting, auditoría y gestión de cuenta.
 - `AGENTS.md` con convenciones obligatorias.
 
-Es la base de las arquitecturas 1, 2 y 4. Su documentación original vive en `boilerplate-backend/docs/`.
+Es la base de las arquitecturas 1, 2 y 4. Su diseño y piezas de código viven en los docs raíz
+(`04-ARQUITECTURA.md`, `05-PATRONES-CODIGO.md`, `06-CHECKLIST-MODULO.md`, `07-DEPLOY.md`).
 
 ---
 
@@ -70,7 +71,7 @@ Es la base de las arquitecturas 1, 2 y 4. Su documentación original vive en `bo
 2. Responde la matriz en **[01-MATRIZ-DECISION.md](01-MATRIZ-DECISION.md)** (10 min)
 3. Lee pros/contras en **[02-COMPARATIVA-OPCIONES.md](02-COMPARATIVA-OPCIONES.md)** (10 min)
 4. Ve a `templates/[tu-arquitectura]/README.md` (15 min)
-5. Clona, instala, empieza a codificar
+5. Sigue la guía, usa `boilerplate-backend/` como base y empieza a codificar
 
 **Tiempo total**: ~40 minutos antes de empezar
 

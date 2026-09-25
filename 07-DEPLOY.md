@@ -38,7 +38,7 @@ Ver también **[04-ARQUITECTURA.md](04-ARQUITECTURA.md)** y **[05-PATRONES-CODIG
 - Auth/storage gestionados (`signInWithPassword`, `storage.from('bucket')`).
 - Límite: la anon key es pública; todo secreto (pagos, cálculos propietarios, admin cross-tenant) exige B o C.
 
-Boilerplate: `templates/03-baas-supabase/`.
+Guía: `templates/03-baas-supabase/`.
 
 ---
 

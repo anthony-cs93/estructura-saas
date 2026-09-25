@@ -1,16 +1,19 @@
-# Full-Stack Monorepo: Frontend + Backend en 1 Repo
+# Guía: Full-Stack Monorepo — Frontend + Backend en 1 Repo
 
-Este boilerplate es para **prototipado rápido**:
+Guía paso a paso para montar una app **todo-en-uno**: frontend y backend en el mismo
+repositorio, con un solo despliegue.
+
+**Para**: prototipado rápido.
 - ✅ MVP en 2 semanas
 - ✅ <10 endpoints
 - ✅ Equipo pequeño (1-2 devs)
 - ✅ 1 repo, 1 deploy a Vercel
 
-**No es para**: Apps complejas con >10 endpoints
+**No es para**: apps complejas con >10 endpoints o lógica de negocio pesada.
 
 ---
 
-## 🎯 Ventajas Monorepo
+## 🎯 Ventajas
 
 | Aspecto | Ventaja |
 |---|---|
@@ -18,51 +21,26 @@ Este boilerplate es para **prototipado rápido**:
 | **Sincronización** | Mismo repo = código actualizado siempre. |
 | **Tipos TypeScript** | Compartir tipos entre frontend y backend. |
 | **1 deploy** | Vercel maneja ambas apps automáticamente. |
-| **Desarrollo local** | `npm run dev` → todo funciona en localhost. |
+| **Desarrollo local** | Un solo comando levanta todo en localhost. |
 
 ---
 
-## ⚡ Quick Start
-
-### 1. Instalar
-
-```bash
-npm install
-```
-
-### 2. Crear .env
-
-```bash
-cp apps/api/.env.example apps/api/.env.local
-# Edita con TURSO_URL y TURSO_TOKEN
-```
-
-### 3. Correr ambas apps
-
-```bash
-npm run dev
-# Frontend: http://localhost:3000
-# Backend: http://localhost:3001
-```
-
----
-
-## 📁 Estructura
+## 📁 Estructura recomendada
 
 ```
-.
+mi-app/
 ├─ apps/
 │  ├─ web/              (Next.js frontend)
 │  │  ├─ pages/
 │  │  ├─ components/
-│  │  ├─ lib/
+│  │  ├─ lib/           (cliente HTTP, hooks)
 │  │  └─ package.json
 │  │
 │  └─ api/              (Express backend)
 │     ├─ src/
 │     │  ├─ routes/
-│     │  ├─ index.ts
-│     │  └─ lib/
+│     │  ├─ lib/        (conexión a BD)
+│     │  └─ index.ts    (servidor)
 │     └─ package.json
 │
 ├─ packages/            (código compartido)
@@ -73,198 +51,68 @@ npm run dev
 └─ package.json         (monorepo config)
 ```
 
+> Para el backend, usa como base el backend de referencia
+> **[`../../boilerplate-backend/`](../../boilerplate-backend/)** (Express + TypeScript + Turso
+> con capas service/repository). El diseño y las piezas de código están en
+> **[`../../04-ARQUITECTURA.md`](../../04-ARQUITECTURA.md)** y
+> **[`../../05-PATRONES-CODIGO.md`](../../05-PATRONES-CODIGO.md)**.
+
 ---
 
-## 💻 Ejemplo
+## ⚡ Pasos de montaje
 
-### apps/api/src/index.ts (Backend Express)
-
-```typescript
-import express from 'express'
-import cors from 'cors'
-import { db } from './lib/db.js'
-
-const app = express()
-
-app.use(cors({ origin: 'http://localhost:3000' }))
-app.use(express.json())
-
-// GET /quotes
-app.get('/quotes', async (req, res) => {
-  const result = await db.execute('SELECT * FROM quotes')
-  res.json({ data: result.rows })
-})
-
-// POST /quotes
-app.post('/quotes', async (req, res) => {
-  const { clientName, total } = req.body
-  const id = crypto.randomUUID()
-  
-  await db.execute(
-    'INSERT INTO quotes (id, client_name, total) VALUES (?, ?, ?)',
-    [id, clientName, total]
-  )
-  
-  res.status(201).json({ data: { id, clientName, total } })
-})
-
-app.listen(3001, () => console.log('Backend on :3001'))
-```
-
-### apps/web/pages/index.tsx (Frontend React)
-
-```typescript
-import { useState, useEffect } from 'react'
-
-const API_URL = 'http://localhost:3001'
-
-export default function Home() {
-  const [quotes, setQuotes] = useState([])
-
-  useEffect(() => {
-    fetch(`${API_URL}/quotes`)
-      .then(r => r.json())
-      .then(({ data }) => setQuotes(data))
-  }, [])
-
-  const handleCreate = async () => {
-    const res = await fetch(`${API_URL}/quotes`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientName: 'Acme', total: 5000 })
-    })
-    const { data } = await res.json()
-    setQuotes([...quotes, data])
-  }
-
-  return (
-    <div>
-      <button onClick={handleCreate}>Create Quote</button>
-      <ul>
-        {quotes.map(q => (
-          <li key={q[0]}>{q[1]} - ${q[2]}</li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-```
+1. **Crea el monorepo**: carpeta raíz con `package.json` y workspaces para `apps/web` y `apps/api`.
+2. **Frontend**: crea la app Next.js en `apps/web` (páginas, componentes, cliente HTTP en `lib/`).
+3. **Backend**: copia el esqueleto de `boilerplate-backend/` en `apps/api` (o reconstruye con
+   `05-PATRONES-CODIGO.md`).
+4. **Comparte tipos**: define las interfaces de dominio en `packages/shared` e impórtalas desde
+   ambos lados.
+5. **Variables de entorno**: crea `.env.local` en `apps/api` con las credenciales de Turso
+   (ver `.env.example` del boilerplate).
+6. **Levanta local**: un solo comando (`npm run dev`) debe arrancar frontend y backend.
+7. **Prueba el flujo**: crea → lista → edita → borra un recurso de ejemplo.
 
 ---
 
 ## 🚀 Deploy a Vercel
 
-### 1. Conectar GitHub
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin [URL]
-git push -u origin main
-```
-
-### 2. Vercel
-
-- Ve a [vercel.com](https://vercel.com)
-- Import → GitHub → selecciona tu repo
-- Vercel detecta monorepo automáticamente
-- Env variables: TURSO_URL, TURSO_TOKEN
-- Deploy automático en cada push
-
-**Vercel configura**:
-- Frontend en `https://tudominio.vercel.app`
-- Backend en `https://api-tudominio.vercel.app`
+1. Sube el repo a GitHub.
+2. En Vercel: Import → GitHub → selecciona el repo. Vercel detecta el monorepo automáticamente.
+3. Configura las variables de entorno del backend (Turso, JWT, etc.) en el dashboard.
+4. Cada push a `main` = deploy automático.
 
 ---
 
-## ⚠️ Limit: Si creces
+## ⚠️ Límite: si creces
 
-**Si necesitas >10 endpoints:**
+Si necesitas más de ~10 endpoints o lógica compleja:
 
-```
-❌ PROBLEMA: Vercel free = máx 12 API routes
-❌ PROBLEMA: Build lento si ambas apps son grandes
-❌ PROBLEMA: No puedes escalar backend sin frontend
-
-✅ SOLUCIÓN: Migra a Backend Separado
-```
+- ❌ El backend y el frontend quedan acoplados (no puedes escalar uno sin el otro).
+- ✅ **Solución**: migra a **Backend Separado** (ver `../../02-backend-separado/`).
 
 Proceso de migración:
 
-1. **Copia** `apps/api/` a repo nuevo (`backend/`)
-2. **Push** backend a Render (en lugar de Vercel)
-3. **Configura** `apps/web/` para consumir backend remoto
-4. **Deploy** frontend a Vercel, backend a Render
-
-→ Ahora eres Backend Separado (ver `../../02-backend-separado/`)
-
----
-
-## 📚 Casos de uso
-
-### ✅ USA Monorepo si:
-- MVP rápido (<2 semanas)
-- Equipo pequeño (<3 devs)
-- <10 endpoints
-- Lógica simple
-
-### ❌ NO USES Monorepo si:
-- Esperas muchos endpoints
-- Lógica de negocio compleja
-- Equipos grandes
-- Necesitas independencia de deploy
+1. Mueve `apps/api/` a un repo nuevo (`backend/`).
+2. Despliega el backend en Render (en lugar de Vercel).
+3. Configura `apps/web/` para consumir el backend remoto.
+4. Despliega frontend a Vercel y backend a Render.
 
 ---
 
 ## ✅ Checklist
 
-- [ ] `npm install` sin errores
-- [ ] `.env.local` configurado en `apps/api/`
-- [ ] BD Turso creada
-- [ ] `npm run dev` → ambas apps corro
-- [ ] Frontend: http://localhost:3000
-- [ ] Backend: http://localhost:3001
-- [ ] API responses en DevTools
-- [ ] Ambos repos en GitHub
-- [ ] Deploy a Vercel
+- [ ] Monorepo con workspaces funcionando
+- [ ] Frontend y backend corren con un solo comando
+- [ ] BD Turso creada y conectada
+- [ ] Tipos compartidos en `packages/shared`
+- [ ] Flujo completo probado (crear → listar → editar → borrar)
+- [ ] Deploy a Vercel con variables de entorno configuradas
 
 ---
 
-## 📋 Estructura de carpetas recomendada
+## 🔗 Referencias
 
-```
-apps/web/
-├─ pages/
-│  ├─ index.tsx
-│  ├─ quotes.tsx
-│  └─ api/               (si necesitas API routes adicionales)
-├─ components/
-│  ├─ QuoteForm.tsx
-│  └─ QuoteList.tsx
-├─ lib/
-│  ├─ api.ts            (cliente HTTP)
-│  └─ hooks.ts          (custom hooks)
-└─ styles/
-
-apps/api/src/
-├─ index.ts             (servidor)
-├─ routes/
-│  ├─ quotes.ts
-│  └─ health.ts
-├─ middleware/
-│  ├─ auth.ts
-│  └─ errorHandler.ts
-└─ lib/
-   └─ db.ts             (conexión Turso)
-```
-
----
-
-## 🔗 Recursos
-
-- [Turborepo (monorepo tool)](https://turbo.build/repo)
-- [Vercel + Monorepo](https://vercel.com/docs/concepts/monorepos)
-- [Next.js Backend](https://nextjs.org/docs/api-routes/introduction)
-
-¡Listo! 🚀
+- Backend de referencia: [`../../boilerplate-backend/`](../../boilerplate-backend/)
+- Arquitectura y decisiones: [`../../04-ARQUITECTURA.md`](../../04-ARQUITECTURA.md)
+- Piezas de código copiables: [`../../05-PATRONES-CODIGO.md`](../../05-PATRONES-CODIGO.md)
+- Despliegue: [`../../07-DEPLOY.md`](../../07-DEPLOY.md)

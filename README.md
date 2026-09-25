@@ -21,7 +21,7 @@ Combina lo mejor de dos enfoques:
 
 ### 2. ¿Ya sabes qué quieres?
 
-👉 **`templates/[tu-arquitectura]/README.md`** — clona, instala, empieza en <30 min.
+👉 **`templates/[tu-arquitectura]/README.md`** — sigue la guía paso a paso de tu arquitectura.
 
 ### 3. ¿Vas a construir un backend con lógica protegida?
 
@@ -52,7 +52,7 @@ Combina lo mejor de dos enfoques:
 
 ## 🎯 Las 4 arquitecturas
 
-| # | Arquitectura | Para | Stack | Boilerplate |
+| # | Arquitectura | Para | Stack | Guía |
 |---|---|---|---|---|
 | 1 | **Full-Stack Monorepo** | MVP rápido, <10 endpoints, equipo pequeño | Next.js + Express (1 repo) | `templates/01-full-stack-monorepo/` |
 | 2 | **Backend Separado** ⭐ | Apps complejas, >10 endpoints, proteger lógica | Next.js (Vercel) + Express (Render) | `templates/02-backend-separado/` |
@@ -82,17 +82,16 @@ estructura-saas/
 │  ├─ QUICK-REFERENCE.md               ← Cheat sheet
 │  └─ INDEX.md                         ← Índice completo
 │
-├─ 🚀 BOILERPLATES (listos para clonar)
+├─ 🚀 GUÍAS DE ARQUITECTURA (paso a paso)
 │  └─ templates/
 │     ├─ 01-full-stack-monorepo/
-│     ├─ 02-backend-separado/          ← Enriquecido con patrones del blueprint
+│     ├─ 02-backend-separado/
 │     ├─ 03-baas-supabase/
 │     └─ 04-serverless-vercel/
 │
 └─ 🧱 BACKEND DE REFERENCIA
    └─ boilerplate-backend/             ← Express + TS + Turso (service/repository)
       ├─ src/
-      ├─ docs/
       ├─ AGENTS.md
       └─ package.json
 ```
@@ -115,11 +114,11 @@ estructura-saas/
 └──────────────┬────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────┐
-│ 4. Clona el boilerplate (5 min)           │ ← Código base
+│ 4. Sigue tu guía en templates/ (15 min)   │ ← Paso a paso
 └──────────────┬────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────┐
-│ 5. npm install && npm run dev (10 min)    │ ← Funciona localmente
+│ 5. Usa boilerplate-backend/ (10 min)      │ ← Código real
 └──────────────┬────────────────────────────┘
                │
 ┌──────────────▼────────────────────────────┐
