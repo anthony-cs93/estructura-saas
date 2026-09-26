@@ -9,7 +9,7 @@ import { globalLimiter } from './middleware/rateLimit.js';
 
 export function createApp() {
   const app = express();
-  app.set('trust proxy', 1);
+  app.set('trust proxy', env.trustProxy);
 
   app.use(
     cors({
@@ -19,13 +19,16 @@ export function createApp() {
   );
   app.use(cookieParser());
   app.use(express.json({ limit: '1mb' }));
-  app.use(globalLimiter);
 
   // Datos autenticados: no cachear (navegador/CDN; seguro detrás de un proxy).
+  // Va ANTES de globalLimiter a propósito: si no, las respuestas 429 del limitador
+  // salen sin `Cache-Control: no-store` y un CDN puede cachear un rechazo.
   app.use('/api', (_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
   });
+
+  app.use(globalLimiter);
   app.use('/api', buildRouter());
   app.use(errorHandler);
 

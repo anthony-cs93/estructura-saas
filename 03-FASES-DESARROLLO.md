@@ -451,17 +451,20 @@ En Vercel/Render, agrega variables en dashboard:
 - Settings → Environment Variables
 - Pega cada variable
 
-#### CORS si necesita (Backend Separado)
+#### CORS (solo si el backend está en otro origen)
 
 ```typescript
-// backend/src/index.ts
-import cors from 'cors'
-
-app.use(cors({
-  origin: 'https://tudominio.com', // URL de producción
-  credentials: true
-}))
+// backend/src/config/env.ts — la plantilla ya lo resuelve y falla al arrancar
+// si falta en producción. Lista separada por comas, nunca un solo origen hardcodeado.
+corsOrigins: requiredInProduction('CORS_ORIGIN', 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 ```
+
+> **Si usás la variante C1 (proxy same-origin), no hay CORS que configurar**: el navegador
+> nunca cruza de origen. Es una de las razones por las que C1 es la recomendada. Ver
+> [07-DEPLOY.md](07-DEPLOY.md).
 
 ### 4.2 Deploy Frontend
 
@@ -507,11 +510,17 @@ Luego en Vercel settings:
 # 5. Build command: npm install
 # 6. Start command: npm run start
 # 7. Agrega env variables en Render dashboard
+#    COPIA el .env.example y completá cada valor. Ninguna queda vacía.
 # 8. Deploy
 
-# Verifica:
-curl https://backend-xxx.onrender.com/health
-# Debería retornar { status: 'ok' }
+# Verifica (el backend primero; después, contra el host que ve el navegador):
+curl -i https://backend-xxx.onrender.com/api/health
+# Esperado: {"status":"ok","mode":"turso"}
+curl -i https://backend-xxx.onrender.com/api/ready
+# Esperado: {"status":"ok","db":"ok"} — 503 significa que Turso no responde.
+
+# Si usás C1 (proxy same-origin), el smoke test va contra el frontend,
+# no contra el backend. Ver la "regla de oro" en 07-DEPLOY.md.
 ```
 
 #### A Railway (alternativa):
@@ -584,25 +593,43 @@ Luego en Sentry dashboard verás errores en vivo.
 ### 4.8 Alertas y uptime
 
 ```bash
-# Uptime robot (gratis)
+# Uptime Robot (gratis)
 # Ir a uptimerobot.com
-# Crear monitor: https://tuapp.vercel.app
+# Crear monitor: https://TU-BACKEND/api/ready
 # Te avisa si cae (por email)
 ```
 
+Dos monitores, no uno: el **frontend** (`https://tuapp.vercel.app`) y el **backend**
+(`/api/ready`). `/api/ready` y no `/api/health` porque verifica la base: distingue "el proceso
+está vivo" de "la app puede operar".
+
+⚠️ **Configurá también alertas de cuota** (750 h de Render, 100 GB de Vercel). Sin ellas te
+enterás cuando el servicio ya está suspendido, que es el peor momento para descubrirlo.
+
+⚠️ **Probá en los tres navegadores antes de cerrar la fase**: Chrome, Firefox y Safari, en
+ventana incógnito. Un login que funciona en Chrome y no en Safari no está terminado. Es el
+fallo que ninguna prueba de `curl` detecta.
+
 ### 📋 Checklist Fase 4
 
-- [ ] `.env.example` completado y documentado
-- [ ] Env variables en Vercel/Render dashboard
+- [ ] `.env.example` completado y documentado, sin secretos reales
+- [ ] Env variables en Vercel/Render dashboard (ninguna vacía; las obligatorias fallan al arrancar)
 - [ ] Frontend deployed a Vercel
 - [ ] Backend deployed a Render/Railway (si aplica)
-- [ ] BD conectada en producción
-- [ ] CORS configurado (si backend separado)
-- [ ] Dominio personalizado (opcional pero profesional)
-- [ ] Testing manual de todas las features
-- [ ] Console sin errores
-- [ ] Network requests OK (status 200)
-- [ ] Monitoring/alertas configuradas
+- [ ] BD conectada en producción · migraciones aplicadas (`npm run migrate`)
+- [ ] Variante de despliegue elegida: **C1** (proxy) · C2 (cross-site) · C3 (dominio) — ver [07-DEPLOY.md](07-DEPLOY.md)
+- [ ] `CORS_ORIGIN` configurado **solo si** el backend está en otro origen (no en C1)
+- [ ] `COOKIE_SAMESITE` acorde a la variante (`lax` en B/C1/C3, `none` solo en C2)
+- [ ] `TRUST_PROXY` **medido**, no supuesto (procedimiento en [07-DEPLOY.md](07-DEPLOY.md))
+- [ ] Test de spoofing de `X-Forwarded-For` pasa (cambiar el header no reinicia el contador)
+- [ ] `Cache-Control: no-store` en toda ruta `/api` autenticada
+- [ ] Smoke test **contra el host que ve el navegador**, no solo contra el backend
+- [ ] Probado en Chrome, Firefox y Safari (normal + incógnito)
+- [ ] Node pineado (`.nvmrc` + `engines`)
+- [ ] Dominio personalizado (opcional; necesario solo en C3)
+- [ ] Previews protegidos o apuntando a un backend de staging
+- [ ] Monitoring de frontend **y** backend + alertas de cuota
+- [ ] Rollback probado una vez (Vercel: *Promote to Production*; Render: redeploy)
 - [ ] Link compartible a amigos/clientes
 
 ---
@@ -629,6 +656,15 @@ Luego en Sentry dashboard verás errores en vivo.
 ❌ **Env variables en el código**: Secretos committeados a GitHub = comprometido
 ❌ **No testear en producción**: "Funcionaba localmente" ≠ funcionaba en prod
 ❌ **Render free durmiéndose**: Cold starts de 10+ segundos = mala UX
+❌ **Probar solo contra el backend**: todo responde perfecto y asumís que el proxy funciona
+❌ **Separar los hosts sin proxy**: te obliga a `SameSite=None` y la sesión se rompe en
+Safari/Firefox para un porcentaje de usuarios. Usá C1 ([07-DEPLOY.md](07-DEPLOY.md))
+❌ **Leer `x-forwarded-for` a mano para el rate limit**: el cliente falsifica el header y
+evade el límite por completo (pasó en producción)
+❌ **`trust proxy` sin medir**: un número supuesto hace que `req.ip` sea la IP del proxy —
+el rate limiting no protege y los logs de auditoría no sirven para investigar
+❌ **Deploy sin Node pineado**: la versión de Node implícita puede cambiar sin aviso
+❌ **Cerrar el deploy sin probar Safari**: es el navegador que primero rompe las cookies
 
 ---
 

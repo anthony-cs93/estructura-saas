@@ -16,7 +16,7 @@ Navega la guía usando este índice.
 | **[04-ARQUITECTURA.md](04-ARQUITECTURA.md)** | Blueprint del backend y decisiones de diseño | Técnicos |
 | **[05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)** | Código copiable (16 piezas) | Developers |
 | **[06-CHECKLIST-MODULO.md](06-CHECKLIST-MODULO.md)** | Agregar un módulo de dominio | Developers |
-| **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue y detalle técnico | Todos (al desplegar) |
+| **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue (A, B, C1/C2/C3), IP real, verificación y rollback | Todos (al desplegar) |
 | **[08-FRONTEND.md](08-FRONTEND.md)** | Guía del frontend (Next.js) que consume el backend | Developers |
 | **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** | Tarjeta de referencia rápida | Todos |
 

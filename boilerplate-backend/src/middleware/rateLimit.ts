@@ -1,11 +1,28 @@
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import type { Request } from 'express';
 
-function clientKey(req: Request): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  const ip = typeof forwarded === 'string' ? forwarded.split(',')[0].trim() : (req.ip ?? '');
+/**
+ * La IP del cliente la resuelve Express a partir de `app.set('trust proxy', N)`.
+ *
+ * NUNCA leer `x-forwarded-for` a mano: el cliente puede prefijar la cadena con un
+ * valor inventado, y tomar `[0]` es tomar exactamente lo que eligió el atacante.
+ * Cambiar el header daba un cubo de rate limit nuevo y limpio → el límite se
+ * evadía por completo con un simple `curl`. Medido en producción; ver
+ * `07-DEPLOY.md` §"La IP real detrás de un proxy".
+ *
+ * `req.ip` + `trust proxy: N` hace que Express recorra la cadena desde la derecha
+ * y devuelva la primera dirección no confiable, ignorando lo que el cliente haya
+ * prefijado. Además, al no pasar `keyGenerator`, `express-rate-limit` ejecuta sus
+ * propias validaciones de `trust proxy`, que detectan una profundidad mal puesta.
+ */
+function safeIpKey(req: Request): string {
+  const ip = req.ip;
   if (!ip) return 'unknown';
-  return ipKeyGenerator(ip);
+  try {
+    return ipKeyGenerator(ip);
+  } catch {
+    return 'unknown';
+  }
 }
 
 export const globalLimiter = rateLimit({
@@ -13,7 +30,6 @@ export const globalLimiter = rateLimit({
   limit: 100,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: clientKey,
 });
 
 export const loginLimiter = rateLimit({
@@ -21,9 +37,11 @@ export const loginLimiter = rateLimit({
   limit: 10,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  // Requiere clave propia para incluir el email. Aun así, la parte de IP sale de
+  // `req.ip` (ya corregido por `trust proxy`), no del header leído a mano.
   keyGenerator: (req) => {
     const email = String((req.body as { email?: unknown })?.email ?? '').trim().toLowerCase();
-    return `${clientKey(req)}:${email}`;
+    return `${safeIpKey(req)}:${email}`;
   },
 });
 
@@ -32,7 +50,6 @@ export const registerLimiter = rateLimit({
   limit: 3,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: clientKey,
 });
 
 export const sensitiveActionLimiter = rateLimit({
@@ -40,5 +57,4 @@ export const sensitiveActionLimiter = rateLimit({
   limit: 5,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  keyGenerator: clientKey,
 });

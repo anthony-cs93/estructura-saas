@@ -30,7 +30,12 @@ export const env = {
   jwtSecret: required('JWT_SECRET'),
   sessionDays: Number(process.env.SESSION_DAYS ?? 7),
   cookieName: 'access_token',
-  corsOrigins: (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+  // lax (default) | strict | none. `none` solo en la variante C2.
+  cookieSameSite: (process.env.COOKIE_SAMESITE ?? 'lax') as 'lax' | 'strict' | 'none',
+  // Profundidad de proxies: se MIDE (07-DEPLOY.md). NUNCA `true`.
+  trustProxy: Number(process.env.TRUST_PROXY ?? 1),
+  // Obligatoria en producción: sin ella la app arranca y falla en cada request.
+  corsOrigins: requiredInProduction('CORS_ORIGIN', 'http://localhost:5173')
     .split(',').map((o) => o.trim()).filter(Boolean),
 } as const;
 ```
@@ -162,9 +167,10 @@ export const requireAuth: RequestHandler = async (req, res, next) => {
 };
 ```
 
-La cookie se fija con `secure`/`sameSite` según entorno; nunca se guarda el token en `localStorage`.
-`clearSessionCookie` debe usar las **mismas** opciones que `setSessionCookie` (si no, no se
-borra bien una cookie `SameSite=None`).
+La cookie se fija con `httpOnly`, `secure` en producción y `sameSite` desde
+`COOKIE_SAMESITE` (default `lax`); nunca se guarda el token en `localStorage`.
+`clearSessionCookie` debe usar las **mismas** opciones que `setSessionCookie` — sin un
+`sameSite` idéntico, borrar una cookie `SameSite=None` no la quita y el logout "no funciona".
 
 ---
 
@@ -211,22 +217,57 @@ export function assertWithinLimit(req: Request, key: string, current: number): v
 
 ### 9. Rate limiting
 
-`src/middleware/rateLimit.ts` — `express-rate-limit` v8 con `ipKeyGenerator` para IPv6:
+`src/middleware/rateLimit.ts` — `express-rate-limit` v8. **Sin `keyGenerator` en los
+limitadores simples**, a propósito: el default usa `req.ip` + `ipKeyGenerator` (agrupa IPv6
+por subred) **y ejecuta las validaciones de `trust proxy`**.
 
 ```ts
 import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import type { Request } from 'express';
 
-function clientKey(req: Request): string {
-  const fwd = req.headers['x-forwarded-for'];
-  const ip = typeof fwd === 'string' ? fwd.split(',')[0].trim() : (req.ip ?? '');
-  return ip ? ipKeyGenerator(ip) : 'unknown';
+// La IP la resuelve Express vía `trust proxy`. NO leer `x-forwarded-for` a mano.
+function safeIpKey(req: Request): string {
+  const ip = req.ip;
+  if (!ip) return 'unknown';
+  try {
+    return ipKeyGenerator(ip);
+  } catch {
+    return 'unknown';
+  }
 }
 
-export const globalLimiter = rateLimit({ windowMs: 60_000, limit: 100, keyGenerator: clientKey });
+export const globalLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 100,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+});
+
+// Solo cuando la clave necesita algo más (login: IP + email).
+export const loginLimiter = rateLimit({
+  windowMs: 15 * 60_000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const email = String((req.body as { email?: unknown })?.email ?? '').trim().toLowerCase();
+    return `${safeIpKey(req)}:${email}`;
+  },
+});
 ```
+
+> 🔴 **No copies la versión que lee el header a mano.** `xff.split(',')[0]` toma el valor que
+> **el cliente controla**: cambiar el header da un cubo de rate limit nuevo y el límite se
+> evade por completo con un `curl`. Pasó en producción y dejó exposed el registro de cuentas
+> (3/hora → ilimitado). Ver el caso real en [07-DEPLOY.md](07-DEPLOY.md).
+>
+> Además, al pasar un `keyGenerator` propio **desactivás las validaciones internas de
+> `trust proxy`**: una profundidad mal puesta falla en silencio, sin warning. Ese es el
+> precio de la "flexibilidad" y no vale la pena en los limitadores simples.
 
 > El `MemoryStore` por defecto es por instancia. En serverless o múltiples instancias,
 > pasar un `store` persistente (Turso/Redis/Upstash).
+
 
 ---
 
@@ -285,10 +326,22 @@ export function buildRouter(): Router {
 ```ts
 export function createApp() {
   const app = express();
-  app.set('trust proxy', 1);
+  // Profundidad de proxies: SE MIDE, no se supone (procedimiento en 07-DEPLOY.md).
+  //   1 = Vercel serverless o Render sin CDN · 2 = Vercel -> Render · 3 = + Cloudflare
+  // NUNCA `true`: devuelve el valor más a la izquierda, que es el que falsifica el cliente.
+  app.set('trust proxy', env.trustProxy);
+
   app.use(cors({ origin: env.isProduction ? env.corsOrigins : true, credentials: true }));
   app.use(cookieParser());
   app.use(express.json({ limit: '1mb' }));
+
+  // Antes de globalLimiter a propósito: si no, los 429 salen sin `no-store`
+  // y un CDN puede cachear un rechazo.
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
+
   app.use(globalLimiter);
   app.use('/api', buildRouter());
   app.use(errorHandler);
@@ -307,13 +360,28 @@ start().catch((err) => { console.error(err); process.exit(1); });
 
 ---
 
-### 14. Cookies cross-origin y sonda de detección
+### 14. Cookies de sesión y sonda de detección
 
-Con frontend y backend en orígenes distintos (Vercel + Render), la cookie de sesión es de
-terceros y el navegador la bloquea. La plantilla emite `SameSite=None; Secure` en producción,
-expone una sonda pública y evita el cache:
+La cookie es **host-only**: `httpOnly`, `secure` en producción, `path: '/'`, y **sin atributo
+`Domain`**. `sameSite` sale de `COOKIE_SAMESITE` (default `lax`).
 
-`src/routes.ts`
+```ts
+function baseCookieOptions(): CookieOptions {
+  return {
+    httpOnly: true,
+    secure: env.isProduction,
+    // `none` solo si el frontend está en otro origen (variante C2), y solo con HTTPS.
+    sameSite: env.cookieSameSite,
+    path: '/',
+  };
+}
+```
+
+> 🔴 **No definas `COOKIE_DOMAIN`.** Con `.tudominio.com` la cookie se comparte con **todos**
+> los subdominios, incluidos los previews de Vercel y el staging: un XSS en cualquiera de
+> ellos obtiene la sesión de producción. Host-only es lo correcto para una SPA y su API.
+
+**Sonda de cookies** — solo para la variante **C2** (frontend llamando directo a otro origen):
 
 ```ts
 // Sonda: 1ª llamada setea `gf_probe`; la 2ª revela si el navegador la devolvió.
@@ -322,7 +390,7 @@ router.get('/cookie-probe', (req, res) => {
   res.cookie('gf_probe', match ? match[1] : String(Date.now()), {
     httpOnly: false,
     secure: env.isProduction,
-    sameSite: env.isProduction ? 'none' : 'lax',
+    sameSite: env.cookieSameSite,
     path: '/',
     maxAge: 120 * 1000,
   });

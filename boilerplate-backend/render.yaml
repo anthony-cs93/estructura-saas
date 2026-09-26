@@ -1,0 +1,46 @@
+# Render blueprint — Patrón C (Vercel frontend + Render backend)
+#
+# Usar con: "New" → "Blueprint" → apuntar a este repo.
+# Ojo: es una guía; los valores marcados como <CAMBIAR> no son defaults válidos.
+#
+# No declares PORT: Render lo inyecta en el start command. Declararlo con un valor
+# inconsistente produce un health check fallido y un loop de reinicio.
+
+services:
+  - type: web
+    name: <CAMBIAR>-backend
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    # Sin estado en disco: el filesystem es efímero en cada redeploy/spin-down.
+    # Todo el estado vive en Turso.
+    autoDeploy: true
+
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true # 32+ bytes aleatorios
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      # Obligatoria en producción: la app falla al arrancar si falta.
+      # CSV de orígenes. Dejala vacía solo si usás la variante C1 (proxy same-origin).
+      - key: CORS_ORIGIN
+        sync: false
+      # lax en B/C1/C3 · none solo en C2 (frontend en otro origen, solo con HTTPS)
+      - key: COOKIE_SAMESITE
+        value: lax
+      # Profundidad de proxies delante de la app. SE MIDE, no se supone.
+      #   1 = Render sin CDN delante
+      #   3 = Render detrás de Cloudflare
+      # Procedimiento en 07-DEPLOY.md
+      - key: TRUST_PROXY
+        value: 1

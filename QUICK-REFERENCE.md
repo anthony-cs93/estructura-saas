@@ -145,8 +145,17 @@ git push
 # Build: npm install
 # Start: npm start
 
-# 3. Env variables en dashboard de Render
+# 3. Copiá .env.example al dashboard de Render y completá TODO.
+#    Las obligatorias (TURSO_*, JWT_SECRET, CORS_ORIGIN) fallan al arrancar si faltan.
+
+# 4. Verificá (el backend primero):
+curl -i https://backend-xxx.onrender.com/api/health   # {"status":"ok","mode":"turso"}
+curl -i https://backend-xxx.onrender.com/api/ready    # 200 = la BD también responde
 ```
+
+> ⚠️ **Si usás la variante C1 (proxy same-origin), el smoke test va contra el frontend**
+> (`https://tuapp.vercel.app/api/health`), no contra el backend. Ver la "regla de oro" en
+> [07-DEPLOY.md](07-DEPLOY.md).
 
 ### BD → Turso
 ```bash
@@ -181,29 +190,41 @@ TURSO_TOKEN=...
 ### Full-Stack
 ```env
 # Backend
-TURSO_URL=libsql://...
-TURSO_TOKEN=...
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
+JWT_SECRET=...
+CORS_ORIGIN=http://localhost:5173
 
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:3001
+# Frontend (vacío = mismo origen)
+NEXT_PUBLIC_API_URL=
 ```
 
 ### Backend Separado
+
+Usá los nombres de `boilerplate-backend/.env.example` — son los que la plantilla exige.
+
 ```env
 # Frontend
-NEXT_PUBLIC_API_URL=http://localhost:3001
-NEXT_PUBLIC_API_URL_PROD=https://api.tudominio.com
+# vacío en Patrón B y C1 (proxy same-origin)
+# URL absoluta solo en C2 / C3
+NEXT_PUBLIC_API_URL=
 
 # Backend
-TURSO_URL=libsql://...
-TURSO_TOKEN=...
-FRONTEND_URL=http://localhost:3000
-FRONTEND_URL_PROD=https://tudominio.com
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=...
+JWT_SECRET=...
+CORS_ORIGIN=https://app.vercel.app,https://tudominio.com
+COOKIE_SAMESITE=lax     # none solo si cruzás de origen (C2), y solo con HTTPS
+TRUST_PROXY=1           # se MIDE, no se supone (ver 07-DEPLOY.md)
 ```
+
+> ⚠️ `NEXT_PUBLIC_*` **no puede ser Secret**: se hornea en el bundle y viaja al navegador.
+> Va como variable normal del proyecto. Y cambiar la URL de la API es un **redeploy
+> completo**, porque se hornea en build time.
 
 ### Frontend (Next.js) — `boilerplate-frontend/`
 ```env
-# '' = mismo origen (Patrón B) o URL del backend (Patrón C)
+# '' = mismo origen (Patrón B y C1) o URL del backend (C2/C3)
 NEXT_PUBLIC_API_URL=
 ```
 
@@ -213,11 +234,17 @@ NEXT_PUBLIC_API_URL=
 
 | Problema | Solución |
 |---|---|
-| API no responde | `curl http://localhost:3001/health` |
-| CORS error | Agrega dominio a `cors({ origin: '...' })` |
-| BD vacía | Crea tabla: `turso db shell mi-app` |
-| Env var no funciona | Reinicia el servidor: `npm run dev` |
-| Build lento | ¿Tienes >10 routes? → migra a Backend Separado |
+| API no responde | `curl http://localhost:3001/api/health` |
+| Sesión se pierde al recargar | Cookie sin `Secure` en producción, o `COOKIE_SAMESITE` mal |
+| Login funciona en Chrome y no en Safari | Cruzás de origen con `SameSite=None`: usá **C1** (proxy same-origin) |
+| CORS error | Agregá el origen a `CORS_ORIGIN` (CSV). En **C1 no hay CORS**: el problema es otro |
+| Rate limit no frena nada | ¿Leés `x-forwarded-for` a mano? Medí `TRUST_PROXY` y usá `req.ip` |
+| Un usuario real bloquea a otros | `TRUST_PROXY` muy alto: `req.ip` es falsificable |
+| 429 se cachea | El `no-store` va montado **antes** del rate limiter |
+| BD vacía | `npm run migrate` (no a mano: el esquema vive en `src/db/migrations/`) |
+| Env var no funciona | Reiniciá el servidor: `npm run dev` |
+| Build falla por tipos | `npm run typecheck`. `tsc` corre en el build: un error de tipos bloquea el deploy |
+| Build lento | ¿>10 rutas? → evaluá mover a Backend Separado |
 
 ---
 
@@ -280,12 +307,21 @@ NEXT_PUBLIC_API_URL=
 
 - [ ] `.env.local` tiene todas las variables
 - [ ] No hay secretos en GitHub
-- [ ] Tests pasan
-- [ ] Console sin errores (F12)
-- [ ] Network requests status 200
-- [ ] Funcionalidades básicas testeadas
-- [ ] Env variables en Vercel/Render dashboard
-- [ ] CORS configurado correctamente
+- [ ] `npm run typecheck` y tests pasan
+- [ ] Node pineado (`.nvmrc` + `engines`) en el repo, no implícito en la plataforma
+- [ ] Env variables en Vercel/Render dashboard, **ninguna vacía**
+- [ ] `CORS_ORIGIN` configurado **solo si** el backend está en otro origen
+- [ ] `COOKIE_SAMESITE` acorde a la variante (`lax` en B/C1/C3, `none` solo en C2)
+- [ ] La cookie **no** lleva atributo `Domain` (host-only)
+- [ ] `TRUST_PROXY` medido (procedimiento en [07-DEPLOY.md](07-DEPLOY.md))
+- [ ] Test de spoofing de `X-Forwarded-For` pasa
+- [ ] `Cache-Control: no-store` en las rutas `/api` autenticadas
+- [ ] Migraciones aplicadas (`npm run migrate`) — el esquema solo se cambia por migración
+- [ ] Smoke test **contra el host que ve el navegador**, no solo contra el backend
+- [ ] Probado en Chrome, Firefox y Safari (normal + incógnito)
+- [ ] Console sin errores y Network en 200
+- [ ] Monitor de uptime + alertas de quota activas
+- [ ] Sabés cómo hacer rollback (Vercel: *Promote to Production*; Render: redeploy)
 
 ---
 

@@ -79,23 +79,28 @@ expone `checkFeature`/`checkLimit` para el gating de UI.
 
 ### 1. Sesión por cookie `httpOnly` (sin token en el navegador)
 
-El backend fija la cookie de sesión (`SameSite=Lax` en local, `SameSite=None; Secure` en
-producción cross-origin). El frontend:
+El backend fija la cookie de sesión **host-only** (`httpOnly`, `secure` en producción,
+`sameSite` desde `COOKIE_SAMESITE`, **sin `Domain`**). El frontend:
 
 - Envía `credentials: 'include'` en cada `fetch`.
 - Lee el usuario con `GET /api/auth/me` al cargar la app (`useAuth`).
 - Si `me` responde 401 → sesión inválida → redirige a `/login`.
 
-### 2. Bloqueo de cookies de terceros (cross-origin)
+### 2. Cookies de terceros: solo en C2
 
-Con frontend y backend en dominios distintos (Vercel + Render), el navegador puede bloquear
-la cookie. La sonda `GET /api/cookie-probe` (pública) lo detecta:
+Solo hay bloqueo cuando el frontend llama **directo** a otro origen (variante **C2**). Ahí la
+sonda `GET /api/cookie-probe` (pública) lo detecta:
 
 - 1ª llamada: el backend setea `gf_probe`.
 - 2ª llamada: si el navegador la devolvió → `cookieReceived: true`; si no, hay bloqueo.
 
-Si hay bloqueo, avisa al usuario. La solución definitiva es cookie first-party
-(mismo origen, proxy o dominio propio) — ver [07-DEPLOY.md](07-DEPLOY.md).
+Con **C1** (proxy same-origin) o **C3** (dominio compartido) la cookie es first-party: no hay
+bloqueo posible, la sonda siempre da `true` y sobra. Si el login funciona en Chrome y falla
+en Safari o Firefox, no es un problema de sonda ni de mensaje de aviso: estás cruzando de
+origen. La solución es un proxy, no un `alert` — ver [07-DEPLOY.md](07-DEPLOY.md).
+
+> Un mensaje de "cookies de terceros bloqueadas" en una app que ya es first-party es
+> información falsa en pantalla y contradice la política de privacidad del producto.
 
 ### 3. Cliente HTTP centralizado
 
@@ -108,6 +113,12 @@ Si hay bloqueo, avisa al usuario. La solución definitiva es cookie first-party
   callback global `onUnauthorized` (registrado por `useAuth` → auto-logout).
 - **Rate limiting**: `ApiError` lleva `retryAfter` (del body `{ retryAfter }` o del header
   `Retry-After`); la UI puede mostrar "intenta de nuevo en Xs".
+- **Timeout**: `AbortController` con `NEXT_PUBLIC_API_TIMEOUT_MS` (15 s por default). Sin él
+  una request colgada deja el spinner girando indefinidamente — el peor síntoma posible,
+  porque parece que la app está viva.
+- **Errores de red saneados**: `fetch failed`, un 502 que devuelve HTML de un proxy, o un
+  cold start de Render sin respuesta se traducen a un mensaje útil ("No se pudo conectar
+  con el servidor"). Nunca renderices HTML crudo ni el mensaje crudo del error de red.
 - Métodos tipados: `get`, `post`, `put`, `patch`, `delete`.
 
 ### 4. Hooks de datos (patrón loading / error / data)
@@ -162,8 +173,11 @@ Para cálculos protegidos (precios, totales):
 
 | Variable | Valor | Cuándo |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `''` (rutas relativas `/api`) | Patrón B: frontend + backend en el mismo Vercel |
-| `NEXT_PUBLIC_API_URL` | `https://api.onrender.com` | Patrón C: frontend (Vercel) + backend (Render) |
+| `NEXT_PUBLIC_API_URL` | `''` (rutas relativas `/api`) | Patrón B, y **C1** (proxy same-origin vía Vercel → Render) |
+| `NEXT_PUBLIC_API_URL` | `https://TU-BACKEND.onrender.com` | **C2** y **C3** (llamada directa cross-origin) |
+
+> Es pública y se hornea en el bundle: **no puede ser Secret** en Vercel, y cambiarla exige
+> un **redeploy completo**. No la definas a mano si usás C1; lo normal es dejarla vacía.
 
 ### Endpoints que consume el frontend
 

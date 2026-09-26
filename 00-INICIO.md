@@ -34,7 +34,7 @@ estructura-saas/
 │  ├─ 04-ARQUITECTURA.md            Blueprint del backend + decisiones de diseño
 │  ├─ 05-PATRONES-CODIGO.md         Código copiable (16 piezas)
 │  ├─ 06-CHECKLIST-MODULO.md        Agregar un módulo de dominio
-│  ├─ 07-DEPLOY.md                  Patrones de despliegue y detalle
+│  ├─ 07-DEPLOY.md                  Patrones A/B/C1-C2-C3, IP real, verificación, rollback
 │  └─ 08-FRONTEND.md                Guía del frontend (Next.js)
 │
 ├─ QUICK-REFERENCE.md               Cheat sheet

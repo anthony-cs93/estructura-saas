@@ -48,20 +48,47 @@ Convenciones obligatorias para agentes que trabajen sobre esta plantilla.
 
 ## Despliegue y cookies
 
-- Guía completa en `../07-DEPLOY.md`.
-- Frontend y backend suelen ser orígenes distintos: cookie `SameSite=None; Secure` en
-  producción + `CORS_ORIGIN` como allowlist. `clearSessionCookie` debe usar las **mismas**
-  opciones que `setSessionCookie` para poder borrarla.
-- `GET /api/cookie-probe` (público) detecta si el navegador bloquea cookies de terceros.
-- Las respuestas `/api` llevan `Cache-Control: no-store` (datos autenticados / proxy).
-- Solución definitiva: cookie first-party (mismo origen, proxy o dominio propio).
+- Guía completa y variantes (C1/C2/C3) en `../07-DEPLOY.md`.
+- La cookie es **host-only**: `httpOnly`, `secure` en producción, `path: '/'`, **sin
+  atributo `Domain`**. No expongas `COOKIE_DOMAIN`: compartiría la cookie con todos los
+  subdominios, incluidos previews y staging, y un XSS ahí robea la sesión de producción.
+- `COOKIE_SAMESITE` sale del entorno (`lax` por default). Ponelo en `none` **solo** si el
+  frontend llama al backend en otro origen, y solo con HTTPS. La variante C1 (proxy
+  same-origin) no lo necesita: nunca hay cruce de origen.
+- `clearSessionCookie` debe usar las **mismas** opciones que `setSessionCookie` para poder
+  borrarla.
+- `GET /api/cookie-probe` (público) detecta el bloqueo de cookies de terceros. **Solo
+  corresponde a la variante C2**; en C1 y C3 la sonda es innecesaria.
+- Las respuestas `/api` llevan `Cache-Control: no-store` (datos autenticados / proxy). Va
+  montado **antes** del rate limiter, para que los 429 también lleven `no-store`.
+
+## IP real y rate limiting
+
+- `app.set('trust proxy', env.trustProxy)` con `TRUST_PROXY` en el entorno. **La profundidad
+  se mide, no se supone**; el procedimiento está en `../07-DEPLOY.md`.
+- **Nunca leas `x-forwarded-for` a mano.** El cliente puede prefijar la cadena, y tomar
+  `[0]` es tomar el valor que eligió el atacante: cambiar el header evade el límite por
+  completo. Usá `req.ip`, que Express resuelve desde la derecha.
+- **Nunca** `trust proxy: true`: devuelve el valor más a la izquierda, o sea el falsificable.
+- No pases `keyGenerator` propio a los limitadores simples: el default de
+  `express-rate-limit` usa `req.ip` + `ipKeyGenerator` (agrupa IPv6 por subred) **y ejecuta
+  las validaciones de `trust proxy`**. Con un `keyGenerator` propio esas validaciones no
+  corren y una config mala falla en silencio. Si necesitás una clave compuesta (login:
+  IP + email), sí usá `keyGenerator` — pero derivando la IP de `req.ip`.
+- El rate limiting en memoria es por instancia; para serverless/multi-instancia usá un
+  `store` persistente.
+- Los logs de auditoría y de login fallido usan `req.ip`: con `trust proxy` mal puesto
+  guardan la IP del proxy y quedan inservibles para investigar.
 
 ## Seguridad
 
 - No commitees secretos. `.env` está ignorado; `.env.example` solo lleva placeholders.
-- En producción `CORS_ORIGIN` es obligatorio y `JWT_SECRET` también (fail-fast).
-- El rate limiting en memoria es por instancia; para serverless/multi-instancia usa un
-  `store` persistente.
+- En producción `CORS_ORIGIN` y `JWT_SECRET` son **obligatorios y fallan al arrancar**
+  (fail-fast). Cumplir la promesa es mejor que un despliegue que arranca roto.
+- Un `GET` no debe escribir en la base. Si un middleware de solo-lectura necesita crear o
+  actualizar filas (materializar un plan, por ejemplo), que lo haga un `POST` explícito o un
+  job: un GET con efectos laterales se puede disparar con un enlace.
+
 
 ## Respuestas
 

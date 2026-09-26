@@ -5,6 +5,9 @@
   "description": "Plantilla canonica de backend SaaS (Express + TypeScript + Turso) basada en las mejores practicas de gestion_financiera_negocio_saas y cotizador-pro-backend.",
   "type": "module",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

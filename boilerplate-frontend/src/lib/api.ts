@@ -19,21 +19,48 @@ export function setOnUnauthorized(cb: () => void): void {
   onUnauthorized = cb;
 }
 
+/**
+ * Sin esto, una request que se cuelga (un proxy lento, un backend en cold start
+ * que no responde) deja la UI esperando indefinidamente: el spinner no termina
+ * nunca. Ajustá según lo que tarde tu backend en despertar.
+ */
+const REQUEST_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS ?? 15000);
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, ...rest } = options;
-  const response = await fetch(`${env.apiUrl}${path}`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    ...rest,
-  });
+  const { body, headers, signal: callerSignal, ...rest } = options;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const onCallerAbort = (): void => controller.abort();
+  callerSignal?.addEventListener('abort', onCallerAbort);
+
+  let response: Response;
+  try {
+    response = await fetch(`${env.apiUrl}${path}`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+      ...rest,
+    });
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new ApiError(0, 'La solicitud tardó demasiado. Revisá tu conexión e intentá de nuevo.');
+    }
+    // Un origen caído o CORS mal configurado no produce respuesta: el error real
+    // ("fetch failed") no le sirve a nadie, y su `message` varía por navegador.
+    throw new ApiError(0, 'No se pudo conectar con el servidor.');
+  } finally {
+    clearTimeout(timeout);
+    callerSignal?.removeEventListener('abort', onCallerAbort);
+  }
 
   if (!response.ok) {
     if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/register')) {
@@ -48,7 +75,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       code = payload.code;
       retryAfter = payload.retryAfter;
     } catch {
-      // sin cuerpo JSON: usar mensaje por defecto
+      // Sin cuerpo JSON. Un 502/504 de un proxy devuelve HTML, y mostrarlo crudo
+      // al usuario es peor que un mensaje genérico.
     }
     if (retryAfter === undefined) {
       const headerVal = response.headers.get('Retry-After');

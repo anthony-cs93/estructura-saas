@@ -44,7 +44,7 @@ Combina lo mejor de dos enfoques:
 | **[04-ARQUITECTURA.md](04-ARQUITECTURA.md)** | Blueprint del backend y decisiones de diseño | 20 min |
 | **[05-PATRONES-CODIGO.md](05-PATRONES-CODIGO.md)** | Fragmentos de código listos para copiar | 30 min |
 | **[06-CHECKLIST-MODULO.md](06-CHECKLIST-MODULO.md)** | Agregar un módulo de dominio | 5 min |
-| **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue y detalle técnico | 20 min |
+| **[07-DEPLOY.md](07-DEPLOY.md)** | Patrones de despliegue (A, B, C1/C2/C3), IP real, verificación y rollback | 30 min |
 | **[08-FRONTEND.md](08-FRONTEND.md)** | Guía del frontend (Next.js) que consume el backend | 15 min |
 | **[QUICK-REFERENCE.md](QUICK-REFERENCE.md)** | Tarjeta de referencia | 5 min |
 | **[INDEX.md](INDEX.md)** | Índice completo | 2 min |

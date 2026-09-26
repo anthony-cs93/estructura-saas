@@ -46,9 +46,10 @@ function baseCookieOptions(): CookieOptions {
   return {
     httpOnly: true,
     secure: env.isProduction,
-    // En producción frontend y backend suelen ser orígenes distintos:
-    // la cookie necesita SameSite=None; Secure para viajar cross-site.
-    sameSite: env.isProduction ? 'none' : 'lax',
+    // Host-only a propósito: sin `domain`, la cookie no viaja a previews ni a
+    // staging. `sameSite` sale de COOKIE_SAMESITE (default `lax`); ponelo en
+    // `none` sólo si el frontend está en otro origen, y sólo con HTTPS.
+    sameSite: env.cookieSameSite,
     path: '/',
   };
 }

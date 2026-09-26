@@ -18,6 +18,8 @@ Convenciones obligatorias para agentes que trabajen sobre esta plantilla.
 - El backend responde `{ error, code? }`; `lib/api.ts` lanza `ApiError` (con `status` y `retryAfter`).
 - Muestra `error.message` en la UI; no mensajes genéricos.
 - Si `ApiError.retryAfter` está definido (429), muestra "intenta de nuevo en Xs".
+- **Nunca** muestres HTML crudo ni el mensaje crudo de un error de red: un 502 de un proxy
+  llega como HTML y se renderiza como texto en la UI.
 
 ## Auth y sesión
 
@@ -39,16 +41,32 @@ Convenciones obligatorias para agentes que trabajen sobre esta plantilla.
 
 ## Cookies cross-origin
 
-- Frontend y backend en orígenes distintos → cookie de terceros (puede bloquearse).
-- Usa `checkCookieProbe()` para detectar el bloqueo y avisar al usuario.
-- Solución definitiva: cookie first-party (ver `../07-DEPLOY.md`).
+- La sesión vive en cookie `httpOnly` host-only. **Nunca** definas `COOKIE_DOMAIN`: la
+  cookie se comparte con todos los subdominios (incluidos previews y staging) y un XSS ahí
+  robe la sesión de producción.
+- `checkCookieProbe()` detecta el bloqueo de cookies de terceros. **Solo es necesario en la
+  variante C2** (frontend llamando directo a otro origen). En la variante **C1** (proxy
+  same-origin) y en C3 (dominio compartido) la cookie nunca es de terceros: la sonda siempre
+  da `true` y no aporta nada. Preferí C1 y no la uses.
+- Si el login funciona en Chrome y falla en Safari o Firefox, casi siempre es que cruzás de
+  origen con `SameSite=None`. La solución no es un mensaje de error: es un proxy (C1).
+- Si igual mostrás un mensaje de bloqueo, que no diga "cookies de terceros" si la app ya es
+  first-party: contradice la política de privacidad del producto y es información falsa en
+  pantalla.
 
-## Seguridad
+## Cliente HTTP
 
-- `NEXT_PUBLIC_*` es público: no pongas secretos.
-- **Nunca** confíes en el frontend para operaciones críticas; el backend valida y recalcula.
+- `lib/api.ts` pone un timeout (`NEXT_PUBLIC_API_TIMEOUT_MS`, 15 s por default). Sin él, una
+  request colgada deja la UI esperando indefinidamente: el spinner no termina nunca.
+- Los errores de red se traducen a un mensaje útil. `fetch failed`, un 502 con HTML de un
+  proxy o un cold start que no responde no le sirven a nadie: mostrálos como "No se pudo
+  conectar con el servidor", no crudo.
 
 ## Configuración
 
-- `NEXT_PUBLIC_API_URL=''` (mismo origen) o la URL del backend (cross-origin).
+- `NEXT_PUBLIC_API_URL=''` (mismo origen — Patrón B y C1) o la URL del backend (C2/C3).
+- `NEXT_PUBLIC_*` es público: no pongas secretos. Y no puede ser Secret en Vercel.
+- Cambiar la URL de la API es un **redeploy completo**: se hornea en el bundle en build time.
 - No commitees `.env.local`.
+- Node pineado en `.nvmrc` y `engines`: la versión implícita de la plataforma puede cambiar
+  sin aviso.

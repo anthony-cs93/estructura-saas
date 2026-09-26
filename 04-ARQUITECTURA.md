@@ -129,18 +129,29 @@ múltiples instancias el store en memoria no es fiable; pasar un `store` persist
 `lib/audit.ts` escribe en `audit_logs` acciones sensibles (por ejemplo, borrado de
 cuenta). Extensible a cambios de plan/rol en un panel admin.
 
-### 9. Cookies cross-origin y sonda de detección
+### 9. Cookies de sesión y sonda de detección
 
-Cuando frontend y backend viven en orígenes distintos (Vercel + Render), la cookie de
-sesión es de terceros y los navegadores la bloquean. La plantilla:
+La cookie de sesión es **host-only** y first-party. La plantilla:
 
-- Emite la cookie con `secure`/`sameSite` según entorno (`SameSite=None; Secure` en
-  producción) y **borra con las mismas opciones** (`clearSessionCookie`).
-- Expone `GET /api/cookie-probe` (público) para que el frontend detecte el bloqueo y
-  avise al usuario.
-- Añade `Cache-Control: no-store` a las respuestas `/api`.
+- La emite con `httpOnly`, `secure` en producción, `sameSite` desde `COOKIE_SAMESITE`
+  (default `lax`) y **sin atributo `Domain`**; **borra con las mismas opciones**
+  (`clearSessionCookie`).
+- Expone `GET /api/cookie-probe` (público) para detectar bloqueo de cookies de terceros.
+  **Solo hace falta en la variante C2**; con proxy same-origin (C1) o dominio compartido
+  (C3) nunca hay bloqueo y la sonda siempre da `true`.
+- Añade `Cache-Control: no-store` a las respuestas `/api`, montado antes del rate limiter.
 
-La solución definitiva (cookie first-party) se documenta en [07-DEPLOY.md](07-DEPLOY.md).
+El diseño correcto no es "cookie de terceros + sonda que avise", sino **proxy same-origin**
+(C1): la cookie es first-party, la sonda sobra y no hace falta pagar un dominio. Ver
+[07-DEPLOY.md](07-DEPLOY.md).
+
+### 9.bis IP real y `trust proxy`
+
+`app.set('trust proxy', env.trustProxy)` con `TRUST_PROXY` en el entorno. El rate limiting y
+los logs de auditoría dependen de que `req.ip` sea la IP real del cliente: **nunca leer
+`x-forwarded-for` a mano** (el cliente puede prefijar la cadena y evadir el límite por
+completo; pasó en producción). La profundidad **se mide**, no se supone, y nunca debe ser
+`true`. Procedimiento y caso real en [07-DEPLOY.md](07-DEPLOY.md).
 
 ### 10. Registro deshabilitable
 
